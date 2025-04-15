@@ -185,7 +185,559 @@
             font-size: 14px;
             color: #666;
         }
+        
+        .rename-container {
+            display: none;
+            margin-left: 5px;
+        }
+        
+        .rename-form {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .rename-form input[type="text"] {
+            width: 150px;
+            padding: 4px;
+        }
+        
+        /* Ações de Arquivo */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .download-btn {
+            color: #2ecc71;
+            background-color: #f0fdf4;
+        }
+        .download-btn:hover {
+            background-color: #dcfce7;
+            transform: scale(1.1);
+        }
+        
+        .rename-btn {
+            color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .rename-btn:hover {
+            background-color: #dbeafe;
+            transform: scale(1.1);
+        }
+        
+        .delete-btn {
+            color: #ef4444;
+            background-color: #fef2f2;
+        }
+        .delete-btn:hover {
+            background-color: #fee2e2;
+            transform: scale(1.1);
+        }
+        
+        .confirm-btn {
+            color: #10b981;
+            background-color: #ecfdf5;
+        }
+        
+        .cancel-btn {
+            color: #64748b;
+            background-color: #f8fafc;
+        }
+        
+        /* Sistema de Design */
+        :root {
+            --success: #10b981;
+            --info: #3b82f6;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gray: #6b7280;
+            --light-bg: #f9fafb;
+            --border: #e2e8f0;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+        }
+
+        /* Ações Aprimoradas */
+        .actions-cell {
+            padding: 12px 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--light-bg);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .action-btn:focus {
+            outline: 2px solid #93c5fd;
+            outline-offset: 2px;
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Ícones específicos */
+        .download-btn {
+            color: var(--success);
+        }
+
+        .download-btn:hover {
+            background-color: #ecfdf5;
+        }
+
+        .rename-btn {
+            color: var(--info);
+        }
+
+        .rename-btn:hover {
+            background-color: #eff6ff;
+        }
+
+        .delete-btn {
+            color: var(--danger);
+        }
+
+        .delete-btn:hover {
+            background-color: #fef2f2;
+        }
+
+        /* Formulário de renomeação */
+        .rename-form {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: var(--light-bg);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-left: 12px;
+        }
+
+        .rename-form input {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            min-width: 200px;
+        }
+
+        .rename-form input:focus {
+            border-color: #93c5fd;
+            box-shadow: 0 0 0 3px #bfdbfe;
+            outline: none;
+        }
+
+        /* Acessibilidade */
+        [aria-hidden="true"] {
+            font-size: 18px;
+        }
+
+        /* Modo Escuro */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --text-primary: #f3f4f6;
+                --text-secondary: #d1d5db;
+                --bg-primary: #111827;
+                --bg-secondary: #1f2937;
+                --border: #374151;
+            }
+            
+            body {
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+            }
+            
+            table {
+                background-color: var(--bg-secondary);
+                border-color: var(--border);
+            }
+            
+            .action-btn {
+                background-color: #1f2937;
+                border-color: #374151;
+            }
+            
+            .rename-form {
+                background-color: #1f2937;
+                border-color: #374151;
+            }
+            
+            .rename-form input {
+                background-color: #111827;
+                color: #f3f4f6;
+                border-color: #4b5563;
+            }
+        }
+
+        /* Micro-interações */
+        tr {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        
+        tr.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Feedback de ações */
+        .action-feedback {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background-color: var(--success);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: slideIn 0.3s ease, fadeOut 0.5s ease 1.5s forwards;
+            z-index: 1000;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            to { opacity: 0; }
+        }
+        
+        /* Tema claro */
+        :root {
+            --success: #10b981;
+            --info: #3b82f6;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        /* Área de Drop */
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 20px 0;
+            transition: all 0.3s;
+            background: #f8fafc;
+        }
+
+        .drop-zone.active {
+            border-color: var(--info);
+            background-color: #eff6ff;
+        }
+
+        /* Animações */
+        tr {
+            transition: all 0.3s ease;
+        }
+
+        tr.hidden {
+            opacity: 0;
+            transform: translateX(-20px);
+            height: 0;
+            padding: 0;
+            margin: 0;
+            border: none;
+            overflow: hidden;
+        }
+
+        /* Barra de busca */
+        .search-container {
+            margin: 0 0 16px 0;
+        }
+
+        .search-container input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Ordenação */
+        th {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 20px;
+        }
+        
+        .sort-icon {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .asc .sort-icon::after {
+            content: '↑';
+        }
+        
+        .desc .sort-icon::after {
+            content: '↓';
+        }
+
+        /* Busca Global */
+        .global-search {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .global-search input {
+            flex: 1;
+            max-width: 400px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+        
+        .search-btn {
+            padding: 8px 16px;
+            background-color: var(--info);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .search-results {
+            margin-top: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        
+        /* Cabeçalhos da tabela */
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            position: relative;
+            background: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        th:first-child {
+            width: 40px;
+            text-align: center;
+            padding-right: 0;
+        }
+        
+        th:nth-child(2) {
+            padding-left: 8px;
+        }
+        
+        .sort-icon {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+        }
+        
+        /* Células da tabela */
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        
+        /* Filtro local */
+        .local-search {
+            margin-bottom: 16px;
+        }
+        
+        .local-search input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        /* Ajustes específicos para coluna de ações */
+        th:nth-last-child(1) {
+            text-align: center;
+            width: 150px;
+            padding-right: 0;
+        }
+        
+        td.actions-cell {
+            text-align: center;
+            white-space: nowrap;
+            padding: 8px 4px;
+        }
+        
+        /* Estilos para ordenação */
+        .sortable {
+            position: relative;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .sort-icon {
+            margin-left: 8px;
+            font-size: 12px;
+            display: inline-block;
+            transition: transform 0.2s;
+            opacity: 0.5;
+        }
+        
+        .sortable:hover .sort-icon {
+            opacity: 1;
+        }
+        
+        .sort-asc .sort-icon {
+            transform: rotate(0deg);
+            opacity: 1;
+        }
+        
+        .sort-desc .sort-icon {
+            transform: rotate(180deg);
+            opacity: 1;
+        }
+        
+        th.sortable:hover {
+            background-color: #f0f4f8;
+        }
+        
+        /* Estilos para botões de ação */
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 16px;
+            color: #4a5568;
+        }
+        
+        .action-btn:hover {
+            background-color: #edf2f7;
+            transform: scale(1.1);
+        }
+        
+        .download-btn:hover {
+            color: #3182ce;
+        }
+        
+        .rename-btn:hover {
+            color: #38a169;
+        }
+        
+        .delete-btn:hover {
+            color: #e53e3e;
+        }
+        
+        /* Estilos para os modais */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.visible {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .cancel-btn {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .confirm-btn {
+            background: #3182ce;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #e53e3e;
+            color: white;
+        }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <div class="panel">
@@ -212,6 +764,14 @@
             <input type="file" name="file" multiple class="file-input">
             <button type="submit" class="btn">Upload</button>
         </form>
+    </div>
+    
+    <div class="search-container">
+        <input type="text" id="file-search" placeholder="Filtrar arquivos..." oninput="filterFiles()">
+    </div>
+    
+    <div class="drop-zone" id="dropZone">
+        <p>Arraste arquivos aqui para upload</p>
     </div>
     
     <div class="panel">
@@ -250,7 +810,7 @@
     
     <div class="panel">
         <h2>Arquivos</h2>
-        <form method="post" action="/move_files" id="files-form">
+        <form method="post" action="/move_files" id="move-form">
             <input type="hidden" name="current_path" value="{{ current_path }}">
             <select name="target_folder" class="folder-select">
                 <option value="">Raiz</option>
@@ -260,28 +820,40 @@
             </select>
             <button type="submit" class="btn">Mover selecionados</button>
         </form>
+        
         <table class="file-table">
             <thead>
                 <tr>
-                    <th>Selecionar</th>
-                    <th>Nome</th>
-                    <th>Tamanho</th>
-                    <th>Modificado</th>
+                    <th style="width: 40px;"><!-- Checkbox --></th>
+                    <th class="sortable" data-sort="name" onclick="sortTable('name')">
+                        Nome <span class="sort-icon">▼</span>
+                    </th>
+                    <th class="sortable" data-sort="size" onclick="sortTable('size')">
+                        Tamanho <span class="sort-icon">▼</span>
+                    </th>
+                    <th class="sortable" data-sort="date" onclick="sortTable('date')">
+                        Modificado <span class="sort-icon">▼</span>
+                    </th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for file in files %}
                 <tr>
-                    <td><input type="checkbox" name="file_names" value="{{ file.name }}" form="files-form"></td>
+                    <td><input type="checkbox" name="selected_files" value="{{ file.name }}"></td>
                     <td>{{ file.name }}</td>
                     <td>{{ file.size }}</td>
                     <td>{{ file.modified|datetime }}</td>
-                    <td>
-                        <a href="/download/{% if file.is_root %}root/{% endif %}{% if file.path %}{{ file.path }}/{% endif %}{{ file.name }}" class="download-link">⬇️ Download</a>
-                        <a href="/delete/{% if file.is_root %}root/{% endif %}{% if file.path %}{{ file.path }}/{% endif %}{{ file.name }}"
-                           onclick="return confirm('Excluir {{ file.name }}?')"
-                           class="delete-link">❌ Excluir</a>
+                    <td class="actions-cell">
+                        <button class="action-btn download-btn" title="Download" onclick="location.href='/download/{% if file.is_root %}root/{% endif %}{% if file.path %}{{ file.path }}/{% endif %}{{ file.name }}'">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="action-btn rename-btn" title="Renomear" onclick="showRenameModal('{{ file.name }}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" title="Excluir" onclick="showDeleteModal('{{ file.name }}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
@@ -289,46 +861,236 @@
         </table>
     </div>
     
+    <!-- Modal de Renomear -->
+    <div id="rename-modal" class="modal">
+        <div class="modal-content">
+            <h3>Renomear Arquivo</h3>
+            <form action="/rename_file" method="POST">
+                <input type="hidden" id="rename-old-name" name="old_name">
+                <input type="text" id="rename-new-name" name="new_name" required>
+                <div class="modal-actions">
+                    <button type="button" class="btn cancel-btn" onclick="toggleModal('rename-modal')">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn confirm-btn">
+                        <i class="fas fa-check"></i> Confirmar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Excluir -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja excluir <span id="delete-file-name"></span>?</p>
+            <div class="modal-actions">
+                <button type="button" class="btn cancel-btn" onclick="toggleModal('delete-modal')">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn delete-btn" onclick="deleteFile()">
+                    <i class="fas fa-trash"></i> Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <script>
+    // Função de mover arquivos
+    document.getElementById('move-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const selected = document.querySelectorAll('input[name="selected_files"]:checked');
+        if(selected.length === 0) {
+            alert('Selecione pelo menos um arquivo');
+            return;
+        }
+        
+        const formData = new FormData(this);
+        selected.forEach(checkbox => {
+            formData.append('selected_files', checkbox.value);
+        });
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if(response.ok) window.location.reload();
+            else alert('Erro ao mover arquivos');
+        });
+    });
+
+    // Função de renomear
+    function showRenameModal(filename) {
+        document.getElementById('rename-old-name').value = filename;
+        document.getElementById('rename-new-name').value = filename;
+        document.getElementById('rename-new-name').focus();
+        document.getElementById('rename-modal').classList.add('visible');
+    }
+
+    // Função de excluir
+    function showDeleteModal(filename) {
+        document.getElementById('delete-file-name').textContent = filename;
+        document.getElementById('delete-modal').dataset.filename = filename;
+        document.getElementById('delete-modal').classList.add('visible');
+    }
+
+    function deleteFile() {
+        const filename = document.getElementById('delete-modal').dataset.filename;
+        fetch(`/delete/${filename}`, {method: 'POST'})
+            .then(response => {
+                if(response.ok) window.location.reload();
+            });
+    }
+
+    // Função toggleModal (deve estar presente)
     function toggleModal(id) {
         document.getElementById(id).classList.toggle('visible');
     }
 
-    function showRenamePrompt(oldName) {
-        const newName = prompt(`Renomear "${oldName}" para:`, oldName);
-        if (newName && newName !== oldName) {
-            const form = document.createElement('form');
-            form.method = 'post';
-            form.action = '/folder_action';
-            
-            form.innerHTML = `
-                <input type="hidden" name="action" value="rename">
-                <input type="hidden" name="current_path" value="{{ current_path }}">
-                <input type="hidden" name="folder_name" value="${oldName}">
-                <input type="hidden" name="new_name" value="${newName}">
-            `;
-            
-            document.body.appendChild(form);
-            form.submit();
-        }
+    // Animação ao carregar
+    document.addEventListener('DOMContentLoaded', () => {
+        const rows = document.querySelectorAll('tr');
+        rows.forEach((row, i) => {
+            setTimeout(() => {
+                row.classList.add('visible');
+            }, i * 50);
+        });
+    });
+    
+    // Feedback global para ações
+    function showActionFeedback(message, type = 'success') {
+        const feedback = document.createElement('div');
+        feedback.className = `action-feedback ${type}`;
+        feedback.textContent = message;
+        document.body.appendChild(feedback);
+        setTimeout(() => feedback.remove(), 2000);
     }
+    
+    // Conectar feedbacks às ações
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            if(confirm(e.target.closest('a').title || 'Confirmar ação?')) {
+                showActionFeedback('Arquivo excluído com sucesso', 'danger');
+            } else {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    document.querySelectorAll('.rename-form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+            showActionFeedback('Arquivo renomeado com sucesso');
+        });
+    });
+    
+    // Drag and Drop
+    document.addEventListener('DOMContentLoaded', () => {
+        const dropZone = document.getElementById('dropZone');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
 
-    function confirmDelete(folderName) {
-        if (confirm(`Excluir permanentemente a pasta "${folderName}" e todo seu conteúdo?`)) {
-            const form = document.createElement('form');
-            form.method = 'post';
-            form.action = '/folder_action';
-            
-            form.innerHTML = `
-                <input type="hidden" name="action" value="delete">
-                <input type="hidden" name="current_path" value="{{ current_path }}">
-                <input type="hidden" name="folder_name" value="${folderName}">
-            `;
-            
-            document.body.appendChild(form);
-            form.submit();
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropZone.classList.add('active');
+        }
+
+        function unhighlight() {
+            dropZone.classList.remove('active');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if(files.length > 0) {
+                showActionFeedback(`Enviando ${files.length} arquivo(s)...`);
+                
+                const formData = new FormData();
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('file', files[i]);
+                }
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                }).then(response => {
+                    if(response.ok) {
+                        showActionFeedback('Upload concluído!');
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                });
+            }
+        }
+    });
+
+    // Filtro com animação
+    function filterFiles() {
+        const input = document.getElementById('file-search');
+        const filter = input.value.toUpperCase();
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const name = row.querySelector('td:nth-child(2)').textContent.toUpperCase();
+            row.style.display = (filter === '' || name.includes(filter)) ? '' : 'none';
+        });
     }
+    
+    // Ordenação
+    function sortTable(column) {
+        const url = new URL(window.location.href);
+        const currentSort = url.searchParams.get('sort');
+        const currentDir = url.searchParams.get('dir');
+        
+        // Resetar classes
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+        });
+        
+        // Definir nova direção
+        let newDir = 'asc';
+        if (currentSort === column) {
+            newDir = currentDir === 'asc' ? 'desc' : 'asc';
+        }
+        
+        // Atualizar URL
+        url.searchParams.set('sort', column);
+        url.searchParams.set('dir', newDir);
+        window.location.href = url.toString();
+    }
+    
+    // Inicializar estado das setas
+    document.addEventListener('DOMContentLoaded', () => {
+        const url = new URL(window.location.href);
+        const currentSort = url.searchParams.get('sort');
+        const currentDir = url.searchParams.get('dir');
+        
+        if (currentSort) {
+            const th = document.querySelector(`th[data-sort="${currentSort}"]`);
+            if (th) {
+                th.classList.add(`sort-${currentDir}`);
+            }
+        }
+    });
     </script>
 </body>
 </html>

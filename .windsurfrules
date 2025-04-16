@@ -6,3 +6,6 @@ git remote add origin https://github.com/Gitthub-Andre/Servidor.git
 git add .
 git commit -m "Implementação de comandos do Plex Media Server"
 git push
+
+git log --oneline
+git reset --hard <hash_do_commit>

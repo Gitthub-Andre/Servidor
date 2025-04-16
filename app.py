@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 import logging
 import subprocess
+
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
@@ -13,7 +14,8 @@ app.secret_key = 'sua_chave_secreta_aqui'  # Mude para uma chave segura em produ
 # Configurações
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limite de 16MB
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # 10 GB
+
 
 # Verificar se o arquivo tem extensão
 def allowed_file(filename):
@@ -85,9 +87,8 @@ def index(folder_path=''):
     
     sort_column = request.args.get('sort', 'name')
     sort_dir = request.args.get('dir', 'asc')
-    
-    # Ordenação
     reverse = (sort_dir == 'desc')
+
     if sort_column == 'name':
         files.sort(key=lambda x: x['name'].lower(), reverse=reverse)
     elif sort_column == 'size':
@@ -107,32 +108,26 @@ def index(folder_path=''):
 # Rota de upload modificada
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    current_path = request.form.get('current_path', '')
-    uploaded_files = request.files.getlist('file')
-
-    # Proteção contra path traversal
-    def is_safe_path(basedir, path):
-        return os.path.realpath(path).startswith(os.path.realpath(basedir))
-
-    for file in uploaded_files:
-        if file.filename:
-            filename = secure_filename(file.filename)
-            save_dir = os.path.join(app.config['UPLOAD_FOLDER'], current_path)
-            save_path = os.path.join(save_dir, filename)
-            # Cria a pasta de destino se não existir
-            os.makedirs(save_dir, exist_ok=True)
-            # Checagem de segurança
-            if not is_safe_path(app.config['UPLOAD_FOLDER'], save_path):
-                app.logger.warning(f'Tentativa de upload inseguro: {save_path}')
-                flash('Caminho de upload inválido!', 'error')
-                continue
-            try:
-                file.save(save_path)
-                app.logger.info(f'Arquivo salvo em: {save_path}')
-            except Exception as e:
-                app.logger.error(f'Erro ao salvar arquivo: {e}')
-                flash(f'Erro ao salvar {filename}: {e}', 'error')
-    return redirect(url_for('index', folder_path=current_path))
+    print('DEBUG UPLOAD FORM:', dict(request.form))
+    # O valor de folder será mostrado logo abaixo
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'message': 'Nenhum arquivo enviado.'}), 400
+    files = request.files.getlist('file')
+    # Suporte tanto a 'current_path' quanto a 'folder' como destino
+    folder = request.form.get('current_path') or request.form.get('folder') or ''
+    dest_dir = os.path.join(app.config['UPLOAD_FOLDER'], folder)
+    print('DEBUG DESTINO:', dest_dir)
+    os.makedirs(dest_dir, exist_ok=True)
+    saved_count = 0
+    for file in files:
+        if file.filename == '':
+            continue
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(dest_dir, filename))
+        saved_count += 1
+    if saved_count == 0:
+        return jsonify({'success': False, 'message': 'Nenhum arquivo válido enviado.'}), 400
+    return jsonify({'success': True, 'message': f'{saved_count} arquivo(s) enviado(s) com sucesso.'})
 
 # Nova rota para mover arquivos
 @app.route('/move_files', methods=['POST'])
@@ -290,23 +285,28 @@ def plex_command():
         'stop': ['systemctl', 'stop', 'plexmediaserver'],
         'restart': ['systemctl', 'restart', 'plexmediaserver'],
         'status': ['systemctl', 'status', 'plexmediaserver'],
-        'update': ['/usr/lib/plexmediaserver/Plex Media Scanner', '--scan', '--refresh'],
-        'logs': ['journalctl', '-u', 'plexmediaserver', '-n', '40', '--no-pager'],
-        'info': ['systemctl', 'show', 'plexmediaserver']
+        'update': ['systemctl', 'reload', 'plexmediaserver'],
+        'logs': ['journalctl', '-u', 'plexmediaserver', '-n', '30', '--no-pager'],
+        'info': ['ps', 'aux'],
+        'enable': ['systemctl', 'enable', 'plexmediaserver'],
+        'disable': ['systemctl', 'disable', 'plexmediaserver'],
+        'version': ['/usr/lib/plexmediaserver/Plex Media Server', '--version'],
     }
     if cmd not in allowed_cmds:
         return jsonify({'success': False, 'message': 'Comando não permitido.'}), 400
     try:
-        result = subprocess.run(allowed_cmds[cmd], capture_output=True, text=True, timeout=30)
-        output = result.stdout if result.stdout else result.stderr
-        return jsonify({'success': True, 'message': output.strip()})
+        # Para comandos que precisam de shell (como version), use shell=True
+        shell_needed = cmd == 'version'
+        result = subprocess.run(
+            ' '.join(allowed_cmds[cmd]) if shell_needed else allowed_cmds[cmd],
+            capture_output=True, text=True, shell=shell_needed
+        )
+        output = result.stdout.strip() or result.stderr.strip() or 'Comando executado.'
+        status = result.returncode == 0
+        return jsonify({'success': status, 'message': output})
     except Exception as e:
         return jsonify({'success': False, 'message': f'Erro ao executar comando: {str(e)}'}), 500
 
 # Configuração para produção
-if __name__ == '__main__':
-    # Em desenvolvimento
-    app.run(debug=True)
-    
-    # Em produção, usar:
-    # app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

@@ -866,14 +866,93 @@
                 form.appendChild(input);
             }
         });
-        // Drag and drop upload: ajusta o formulário para enviar o current_path
+        // Upload com barra de progresso
         const uploadForm = document.getElementById('upload-form');
-        if (uploadForm && !uploadForm.querySelector('input[name="current_path"]')) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'current_path';
-            input.value = window.current_path || (typeof current_path !== 'undefined' ? current_path : '');
-            uploadForm.appendChild(input);
+        const fileInput = document.getElementById('fileInput');
+        const progressBar = document.getElementById('uploadProgress');
+
+        function handleUpload(files) {
+            console.log('handleUpload chamado', files);
+            if (!files || !files.length) {
+                alert('Selecione um arquivo para enviar.');
+                return;
+            }
+            const formData = new FormData();
+            // Adiciona todos os arquivos
+            for (let i = 0; i < files.length; i++) {
+                formData.append('file', files[i]);
+            }
+            // Sempre adiciona o current_path correto
+            var currentPathInput = document.querySelector('input[name="current_path"]');
+            var currentPath = currentPathInput ? currentPathInput.value : '';
+            console.log('current_path enviado:', currentPath);
+            formData.append('current_path', currentPath);
+            // Log do que está sendo enviado
+            for (let pair of formData.entries()) {
+                console.log('FormData:', pair[0], pair[1]);
+            }
+            progressBar.style.display = 'block';
+            progressBar.value = 0;
+            progressStatus.textContent = '';
+            let hideTimeout = null;
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    progressBar.value = percent;
+                    progressStatus.textContent = percent + '%';
+                }
+            };
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    progressBar.value = 100;
+                    progressStatus.textContent = 'Concluído!';
+                    hideTimeout = setTimeout(() => {
+                        progressBar.style.display = 'none';
+                        progressStatus.textContent = '';
+                        fileInput.value = '';
+                        window.location.reload();
+                    }, 800);
+                } else {
+                    progressStatus.textContent = 'Erro no upload';
+                    progressBar.style.display = 'none';
+                }
+            };
+            xhr.onerror = function() {
+                progressStatus.textContent = 'Erro de conexão.';
+                if (hideTimeout) clearTimeout(hideTimeout);
+                progressBar.style.display = 'none';
+            };
+
+            xhr.send(formData);
+        }
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleUpload(fileInput.files);
+            });
+        }
+        // Drag and drop para upload
+        const dropZone = document.getElementById('dropZone');
+        if (dropZone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    dropZone.classList.add('highlight');
+                }, false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    dropZone.classList.remove('highlight');
+                }, false);
+            });
+            dropZone.addEventListener('drop', function(e) {
+                const files = e.dataTransfer.files;
+                progressBar.style.display = 'block';
+                handleUpload(files);
+            });
         }
     });
     </script>
@@ -901,11 +980,107 @@
             {% endif %}
         {% endwith %}
         
-        <form method="post" action="/upload" enctype="multipart/form-data" class="upload-form">
-            <input type="hidden" name="current_path" value="{{ current_path }}">
-            <input type="file" name="file" multiple class="file-input">
-            <button type="submit" class="btn">Upload</button>
-        </form>
+        <form method="post" action="/upload" enctype="multipart/form-data" class="upload-form" id="upload-form">
+    <input type="hidden" name="current_path" value="{{ current_path }}">
+    <input type="file" name="file" multiple class="file-input" id="fileInput">
+    <button type="submit" class="btn">Upload</button>
+    <progress id="uploadProgress" value="0" max="100" style="width: 300px; display: none; margin-left: 10px;"></progress>
+    <span id="progressStatus" style="margin-left: 10px;"></span>
+</form>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Upload com barra de progresso
+            const uploadForm = document.getElementById('upload-form');
+            const fileInput = document.getElementById('fileInput');
+            const progressBar = document.getElementById('uploadProgress');
+
+            function handleUpload(files) {
+                console.log('handleUpload chamado', files);
+                if (!files || !files.length) {
+                    alert('Selecione um arquivo para enviar.');
+                    return;
+                }
+                const formData = new FormData();
+                // Adiciona todos os arquivos
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('file', files[i]);
+                }
+                // Sempre adiciona o current_path correto
+                console.log('window.current_path:', window.current_path);
+                formData.append('current_path', window.current_path || '');
+                // Log do que está sendo enviado
+                for (let pair of formData.entries()) {
+                    console.log('FormData:', pair[0], pair[1]);
+                }
+                progressBar.style.display = 'block';
+                progressBar.value = 0;
+                progressStatus.textContent = '';
+                let hideTimeout = null;
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/upload', true);
+                xhr.upload.onprogress = function(e) {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.value = percent;
+                        progressStatus.textContent = percent + '%';
+                    }
+                };
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        progressBar.value = 100;
+                        progressStatus.textContent = 'Concluído!';
+                        hideTimeout = setTimeout(() => {
+                            progressBar.style.display = 'none';
+                            progressStatus.textContent = '';
+                            fileInput.value = '';
+                            window.location.reload();
+                        }, 800);
+                    } else {
+                        progressStatus.textContent = 'Erro no upload';
+                        progressBar.style.display = 'none';
+                    }
+                };
+                xhr.onerror = function() {
+                    progressStatus.textContent = 'Erro de conexão.';
+                    if (hideTimeout) clearTimeout(hideTimeout);
+                    progressBar.style.display = 'none';
+                };
+
+                xhr.send(formData);
+            }
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleUpload(fileInput.files);
+                });
+            }
+            // Drag and drop para upload
+            const dropZone = document.getElementById('dropZone');
+            if (dropZone) {
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, e => {
+                        e.preventDefault();
+                        dropZone.classList.add('highlight');
+                    }, false);
+                });
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropZone.addEventListener(eventName, e => {
+                        e.preventDefault();
+                        dropZone.classList.remove('highlight');
+                    }, false);
+                });
+                dropZone.addEventListener('drop', function(e) {
+                    const files = e.dataTransfer.files;
+                    progressBar.style.display = 'block';
+                    handleUpload(files);
+                });
+            }
+        });
+        </script>
+        <div class="drop-zone" id="dropZone">
+            <p>Arraste arquivos aqui para upload</p>
+            
+        </div>
     </div>
     
     <div class="search-container">
@@ -919,14 +1094,17 @@
             <li class="navbar-item dropdown">
                 <a href="#" class="navbar-link">Plex &#9662;</a>
                 <ul class="dropdown-menu">
-                    <li><a href="#" onclick="executePlexCommand('start')">Iniciar Plex</a></li>
-                    <li><a href="#" onclick="executePlexCommand('stop')">Parar Plex</a></li>
-                    <li><a href="#" onclick="executePlexCommand('restart')">Reiniciar Plex</a></li>
-                    <li><a href="#" onclick="executePlexCommand('status')">Status do Plex</a></li>
-                    <li><a href="#" onclick="executePlexCommand('update')">Atualizar Biblioteca</a></li>
-                    <li><a href="#" onclick="executePlexCommand('logs')">Ver Logs</a></li>
-                    <li><a href="#" onclick="executePlexCommand('info')">Informações do Servidor</a></li>
-                </ul>
+    <li><a href="#" onclick="executePlexCommand('start')">Iniciar Plex</a></li>
+    <li><a href="#" onclick="executePlexCommand('stop')">Parar Plex</a></li>
+    <li><a href="#" onclick="executePlexCommand('restart')">Reiniciar Plex</a></li>
+    <li><a href="#" onclick="executePlexCommand('status')">Status do Plex</a></li>
+    <li><a href="#" onclick="executePlexCommand('update')">Atualizar Biblioteca</a></li>
+    <li><a href="#" onclick="executePlexCommand('logs')">Ver Logs</a></li>
+    <li><a href="#" onclick="executePlexCommand('info')">Informações do Servidor</a></li>
+    <li><a href="#" onclick="executePlexCommand('enable')">Ativar na Inicialização</a></li>
+    <li><a href="#" onclick="executePlexCommand('disable')">Desativar na Inicialização</a></li>
+    <li><a href="#" onclick="executePlexCommand('version')">Versão do Plex</a></li>
+</ul>
             </li>
             <li class="navbar-item">
                 <a href="/logout" class="navbar-link">Logout</a>
@@ -1031,10 +1209,7 @@ function executePlexCommand(command) {
 }
 </script>
 
-<div class="drop-zone" id="dropZone">
-        <p>Arraste arquivos aqui para upload</p>
-    </div>
-    
+
     <div class="panel">
         <button onclick="toggleModal('create-modal')" class="btn-action">
             + Nova Pasta
@@ -1322,51 +1497,15 @@ function executePlexCommand(command) {
             dropZone.addEventListener(eventName, unhighlight, false);
         });
 
+        function unhighlight(e) {
+            dropZone.classList.remove('highlight');
+        }
+
         function highlight() {
             dropZone.classList.add('active');
         }
 
-        function unhighlight() {
-            dropZone.classList.remove('active');
-        }
-
-        dropZone.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
-
-        function handleFiles(files) {
-            if(files.length > 0) {
-                showActionFeedback(`Enviando ${files.length} arquivo(s)...`);
-                
-                const formData = new FormData();
-                for (let i = 0; i < files.length; i++) {
-                    formData.append('file', files[i]);
-                }
-                // Adiciona o current_path do contexto (garante upload na subpasta correta)
-                if (window.current_path !== undefined) {
-                    formData.append('current_path', window.current_path);
-                } else if (typeof current_path !== 'undefined') {
-                    formData.append('current_path', current_path);
-                } else {
-                    // fallback: tenta pegar do input do form
-                    const input = document.querySelector('input[name="current_path"]');
-                    if (input) formData.append('current_path', input.value);
-                }
-                fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                }).then(response => {
-                    if(response.ok) {
-                        showActionFeedback('Upload concluído!');
-                        setTimeout(() => location.reload(), 1000);
-                    }
-                });
-            }
-        }
+        // BLOCO DUPLICADO DE UPLOAD REMOVIDO. Use apenas handleUpload do bloco principal!
     });
 
     // Filtro com animação
@@ -1418,5 +1557,43 @@ function executePlexCommand(command) {
         }
     });
     </script>
+
+<script>
+document.getElementById('upload-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var fileInput = document.getElementById('fileInput');
+    var folderInput = document.getElementById('folderInput');
+    var progressBar = document.getElementById('progressBar');
+    var progressStatus = document.getElementById('progressStatus');
+    var formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('folder', folderInput.value);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/upload', true);
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable) {
+        var percent = Math.round((e.loaded / e.total) * 100);
+        progressBar.value = percent;
+        progressStatus.textContent = percent + '%';
+      }
+    };
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        progressStatus.textContent = 'Upload concluído!';
+        progressBar.value = 0;
+        fileInput.value = '';
+        setTimeout(function(){ progressStatus.textContent = ''; }, 3000);
+        location.reload(); // Atualiza a lista de arquivos
+      } else {
+        progressStatus.textContent = 'Erro: ' + xhr.responseText;
+      }
+    };
+    xhr.onerror = function() {
+      progressStatus.textContent = 'Erro de conexão.';
+    };
+    progressStatus.textContent = 'Enviando...';
+    xhr.send(formData);
+});
+</script>
 </body>
 </html>

@@ -4,6 +4,7 @@ import shutil
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import logging
+import subprocess
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
@@ -279,30 +280,28 @@ def rename_file():
 
     return redirect(url_for('index', folder_path=current_path))
 
-# Rota de busca global
-@app.route('/search')
-def search_files():
-    query = request.args.get('q', '').lower()
-    if not query:
-        return jsonify([])
-    
-    results = []
-    base_dir = app.config['UPLOAD_FOLDER']
-    
-    for root, dirs, files in os.walk(base_dir):
-        for file in files:
-            if query in file.lower():
-                rel_path = os.path.relpath(root, base_dir)
-                file_path = os.path.join(root, file)
-                
-                results.append({
-                    'name': file,
-                    'path': rel_path if rel_path != '.' else '',
-                    'size': os.path.getsize(file_path),
-                    'modified': datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M')
-                })
-    
-    return jsonify(results)
+# --- ROTA PARA COMANDOS DO PLEX MEDIA SERVER ---
+@app.route('/plex_command', methods=['POST'])
+def plex_command():
+    data = request.get_json()
+    cmd = data.get('cmd')
+    allowed_cmds = {
+        'start': ['systemctl', 'start', 'plexmediaserver'],
+        'stop': ['systemctl', 'stop', 'plexmediaserver'],
+        'restart': ['systemctl', 'restart', 'plexmediaserver'],
+        'status': ['systemctl', 'status', 'plexmediaserver'],
+        'update': ['/usr/lib/plexmediaserver/Plex Media Scanner', '--scan', '--refresh'],
+        'logs': ['journalctl', '-u', 'plexmediaserver', '-n', '40', '--no-pager'],
+        'info': ['systemctl', 'show', 'plexmediaserver']
+    }
+    if cmd not in allowed_cmds:
+        return jsonify({'success': False, 'message': 'Comando não permitido.'}), 400
+    try:
+        result = subprocess.run(allowed_cmds[cmd], capture_output=True, text=True, timeout=30)
+        output = result.stdout if result.stdout else result.stderr
+        return jsonify({'success': True, 'message': output.strip()})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Erro ao executar comando: {str(e)}'}), 500
 
 # Configuração para produção
 if __name__ == '__main__':

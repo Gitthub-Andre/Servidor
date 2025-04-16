@@ -152,7 +152,23 @@ def download(filepath):
         flash(f'Erro ao baixar arquivo: {str(e)}')
         return redirect(url_for('index'))
 
-# Rota para excluir arquivo
+# Rota para excluir arquivo (compatível com frontend JS)
+@app.route('/delete_file', methods=['POST'])
+def delete_file_post():
+    old_name = request.form.get('old_name')
+    current_path = request.form.get('current_path', '')
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], current_path, old_name)
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            flash('Arquivo excluído com sucesso', 'success')
+        else:
+            flash('Arquivo não encontrado', 'error')
+    except Exception as e:
+        flash(f'Erro ao excluir arquivo: {str(e)}', 'error')
+    return redirect(request.referrer or url_for('index'))
+
+# Rota para excluir arquivo (legacy, aceita via URL)
 @app.route('/delete/<path:filename>', methods=['POST'])
 def delete_file(filename):
     try:
@@ -173,23 +189,35 @@ def folder_action():
     folder_name = request.form.get('folder_name')
     new_name = request.form.get('new_name', '')
     current_path = request.form.get('current_path', '')
+    # Sanitização
+    folder_name = folder_name.strip() if folder_name else folder_name
+    current_path = current_path.strip() if current_path else current_path
+    new_name = new_name.strip() if new_name else new_name
     
     try:
-        base_path = os.path.join(app.config['UPLOAD_FOLDER'], current_path)
-        
+        # LOG para depuração
+        print('--- FOLDER_ACTION DEBUG ---')
+        print('action:', action)
+        print('current_path:', current_path)
+        print('folder_name:', folder_name)
+        print('new_name:', new_name)
+        folder_path = os.path.join(app.config['UPLOAD_FOLDER'], current_path, folder_name)
+        new_folder_path = os.path.join(app.config['UPLOAD_FOLDER'], current_path, new_name)
+        print('folder_path:', folder_path)
+        print('new_folder_path:', new_folder_path)
+        print('JOINED PATH:', os.path.join(app.config['UPLOAD_FOLDER'], current_path, folder_name))
+        print('---------------------------')
+
         if action == 'create' and folder_name:
-            os.makedirs(os.path.join(base_path, folder_name), exist_ok=True)
+            os.makedirs(folder_path, exist_ok=True)
             flash(f'Pasta "{folder_name}" criada!')
-            
+        
         elif action == 'rename' and folder_name and new_name:
-            os.rename(
-                os.path.join(base_path, folder_name),
-                os.path.join(base_path, new_name)
-            )
+            os.rename(folder_path, new_folder_path)
             flash(f'Pasta renomeada para "{new_name}"!')
-            
+        
         elif action == 'delete' and folder_name:
-            shutil.rmtree(os.path.join(base_path, folder_name))
+            shutil.rmtree(folder_path)
             flash(f'Pasta "{folder_name}" excluída!')
             
     except Exception as e:
@@ -202,28 +230,37 @@ def folder_action():
 def rename_file():
     current_path = request.form.get('current_path', '')
     old_name = request.form.get('old_name')
-    new_name = secure_filename(request.form.get('new_name'))
-    
+    new_name = request.form.get('new_name')
+
+    # Permitir espaços e acentos em arquivos e pastas; só bloquear nomes inválidos
+    def is_file(name):
+        return '.' in name and not name.startswith('.')
+
+    if '/' in new_name or '\\' in new_name or not new_name.strip():
+        flash('Nome inválido!')
+        return redirect(url_for('index', folder_path=current_path))
+    new_name = new_name.strip()
+
     if not old_name or not new_name:
         flash('Nomes inválidos')
         return redirect(url_for('index', folder_path=current_path))
-    
+
     if old_name == new_name:
         return redirect(url_for('index', folder_path=current_path))
-    
+
     old_path = os.path.join(app.config['UPLOAD_FOLDER'], current_path, old_name)
     new_path = os.path.join(app.config['UPLOAD_FOLDER'], current_path, new_name)
-    
+
     if os.path.exists(new_path):
-        flash('Já existe um arquivo com esse nome!')
+        flash('Já existe um arquivo ou pasta com esse nome!')
         return redirect(url_for('index', folder_path=current_path))
-    
+
     try:
         os.rename(old_path, new_path)
-        flash('Arquivo renomeado com sucesso!')
+        flash('Renomeado com sucesso!')
     except Exception as e:
         flash(f'Erro ao renomear: {str(e)}')
-    
+
     return redirect(url_for('index', folder_path=current_path))
 
 # Rota de busca global

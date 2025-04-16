@@ -11,6 +11,64 @@
             color: #23272f;
             background: linear-gradient(120deg, #f4f6fb 0%, #e9ecf3 100%);
         }
+        @media (max-width: 700px) {
+            body {
+                padding: 8px 2px 16px 2px;
+            }
+            .panel {
+                padding: 10px 4px 8px 4px;
+            }
+            .file-table th, .file-table td {
+                padding: 8px 4px;
+                font-size: 13px;
+            }
+            h1, h2 {
+                font-size: 1.3rem !important;
+            }
+        }
+        .file-table {
+            overflow-x: auto;
+        }
+        .file-table th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .panel:focus-within, .panel:hover {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+        .btn-action {
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(67,233,123,0.08);
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+        }
+        .btn-action:focus {
+            outline: 2px solid #43e97b;
+            outline-offset: 2px;
+        }
+        .btn-action:hover {
+            background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+            box-shadow: 0 4px 16px rgba(56,249,215,0.13);
+            transform: translateY(-2px) scale(1.03);
+        }
+        .breadcrumb a {
+            color: #4CAF50;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .breadcrumb a:focus {
+            outline: 2px solid #43e97b;
+            outline-offset: 2px;
+        }
+        .breadcrumb a:hover {
+            color: #2e7d32;
+        }
         
         .panel {
             background: #fff;
@@ -785,6 +843,40 @@
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script>
+    // Garante que todos os formulários de renomear e excluir enviem o current_path correto
+    document.addEventListener('DOMContentLoaded', function() {
+        // Renomear arquivo/pasta
+        document.querySelectorAll('.rename-form').forEach(form => {
+            if (!form.querySelector('input[name="current_path"]')) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'current_path';
+                input.value = window.current_path || (typeof current_path !== 'undefined' ? current_path : '');
+                form.appendChild(input);
+            }
+        });
+        // Excluir arquivo/pasta
+        document.querySelectorAll('.delete-form').forEach(form => {
+            if (!form.querySelector('input[name="current_path"]')) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'current_path';
+                input.value = window.current_path || (typeof current_path !== 'undefined' ? current_path : '');
+                form.appendChild(input);
+            }
+        });
+        // Drag and drop upload: ajusta o formulário para enviar o current_path
+        const uploadForm = document.getElementById('upload-form');
+        if (uploadForm && !uploadForm.querySelector('input[name="current_path"]')) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'current_path';
+            input.value = window.current_path || (typeof current_path !== 'undefined' ? current_path : '');
+            uploadForm.appendChild(input);
+        }
+    });
+    </script>
 </head>
 <body>
     <div class="panel">
@@ -832,10 +924,8 @@
                     📂 {{ folder.name }} <span class="file-count">({{ folder.file_count }})</span>
                 </a>
                 <div class="folder-actions">
-                    <button onclick="showRenamePrompt('{{ folder.name }}')" 
-                            class="btn-icon" title="Renomear">✏️</button>
-                    <button onclick="confirmDelete('{{ folder.name }}')" 
-                            class="btn-icon danger" title="Excluir">🗑️</button>
+                    <button type="button" onclick="showRenameModal('{{ folder.path|replace('\\', '/') }}', true)" class="btn-icon" title="Renomear">✏️</button>
+                    <button onclick="showDeleteModal('{{ folder.path|replace('\\', '/') }}', true)" class="btn-icon danger" title="Excluir">🗑️</button>
                 </div>
             </div>
             {% endfor %}
@@ -894,10 +984,10 @@
                         <button class="action-btn download-btn" title="Download" onclick="location.href='/download/{% if file.is_root %}root/{% endif %}{% if file.path %}{{ file.path }}/{% endif %}{{ file.name }}'">
                             <i class="fas fa-download"></i>
                         </button>
-                        <button class="action-btn rename-btn" title="Renomear" onclick="showRenameModal('{{ file.name }}')">
+                        <button class="action-btn rename-btn" title="Renomear" onclick="showRenameModal('{% if file.path %}{{ file.path }}/{{ file.name }}{% else %}{{ file.name }}{% endif %}', false)">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="action-btn delete-btn" title="Excluir" onclick="showDeleteModal('{{ file.name }}')">
+                        <button class="action-btn delete-btn" title="Excluir" onclick="showDeleteModal('{% if file.path %}{{ file.path }}/{{ file.name }}{% else %}{{ file.name }}{% endif %}', false)">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -910,9 +1000,11 @@
     <!-- Modal de Renomear -->
     <div id="rename-modal" class="modal">
         <div class="modal-content">
-            <h3>Renomear Arquivo</h3>
-            <form action="/rename_file" method="POST">
+            <h3>Renomear Arquivo/Pasta</h3>
+            <form id="rename-form" action="/rename_file" method="POST">
+                <input type="hidden" id="rename-action" name="action" value="">
                 <input type="hidden" id="rename-old-name" name="old_name">
+                <input type="hidden" id="rename-current-path" name="current_path">
                 <input type="text" id="rename-new-name" name="new_name" required>
                 <div class="modal-actions">
                     <button type="button" class="btn cancel-btn" onclick="toggleModal('rename-modal')">
@@ -966,27 +1058,83 @@
         });
     });
 
-    // Função de renomear
-    function showRenameModal(filename) {
-        document.getElementById('rename-old-name').value = filename;
-        document.getElementById('rename-new-name').value = filename;
-        document.getElementById('rename-new-name').focus();
+    // Função de renomear (agora aceita path relativo)
+    // Adiciona parâmetro isFolder para diferenciar
+    function showRenameModal(path, isFolder = false) {
+    // Remove aspas extras se vier do tojson
+    if(typeof path === 'string' && path.startsWith('"') && path.endsWith('"')){
+        path = path.substring(1, path.length-1);
+    }
+    // Normaliza barras
+    path = path.replace(/\\/g, '/');
+        console.log('showRenameModal chamada', path, isFolder);
+        let parts = path.split('/');
+        let name = parts.pop();
+        let folder = parts.join('/');
+        document.getElementById('rename-old-name').value = name.trim();
+        document.getElementById('rename-current-path').value = folder.trim();
+        document.getElementById('rename-new-name').value = name.trim();
+        document.getElementById('rename-modal').dataset.isFolder = isFolder ? '1' : '';
         document.getElementById('rename-modal').classList.add('visible');
+        // Log para depuração
+        if(isFolder) {
+            console.log('Renomear pasta:', { name, folder, path });
+        }
+        // Troca o form action
+        if(isFolder) {
+            document.getElementById('rename-form').action = '/folder_action';
+            document.getElementById('rename-action').value = 'rename';
+            document.getElementById('rename-old-name').name = 'folder_name';
+        } else {
+            document.getElementById('rename-form').action = '/rename_file';
+            document.getElementById('rename-action').value = '';
+            document.getElementById('rename-old-name').name = 'old_name';
+        }
     }
 
-    // Função de excluir
-    function showDeleteModal(filename) {
-        document.getElementById('delete-file-name').textContent = filename;
-        document.getElementById('delete-modal').dataset.filename = filename;
+    // Função de excluir (agora aceita path relativo)
+    // Função de excluir (agora aceita path relativo e tipo)
+    function showDeleteModal(path, isFolder = false) {
+    // Remove aspas extras se vier do tojson
+    if(typeof path === 'string' && path.startsWith('"') && path.endsWith('"')){
+        path = path.substring(1, path.length-1);
+    }
+    // Normaliza barras
+    path = path.replace(/\\/g, '/');
+        let parts = path.split('/');
+        let name = parts.pop();
+        let folder = parts.join('/');
+        document.getElementById('delete-file-name').textContent = name;
+        document.getElementById('delete-modal').dataset.filename = name.trim();
+        document.getElementById('delete-modal').dataset.currentPath = folder.trim();
+        document.getElementById('delete-modal').dataset.isFolder = isFolder ? '1' : '';
         document.getElementById('delete-modal').classList.add('visible');
     }
 
     function deleteFile() {
         const filename = document.getElementById('delete-modal').dataset.filename;
-        fetch(`/delete/${filename}`, {method: 'POST'})
-            .then(response => {
-                if(response.ok) window.location.reload();
-            });
+        const currentPath = document.getElementById('delete-modal').dataset.currentPath || '';
+        const isFolder = document.getElementById('delete-modal').dataset.isFolder === '1';
+        if (isFolder) {
+            // Excluir pasta
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('folder_name', filename);
+            formData.append('current_path', currentPath);
+            fetch('/folder_action', {method: 'POST', body: formData})
+                .then(response => {
+                    if(response.ok) window.location.reload();
+                });
+        } else {
+            // Excluir arquivo
+            const formData = new FormData();
+            formData.append('old_name', filename);
+            formData.append('current_path', currentPath);
+            fetch('/delete_file', {method: 'POST', body: formData})
+                .then(response => {
+                    if(response.ok) window.location.reload();
+                });
+        }
     }
 
     // Função toggleModal (deve estar presente)

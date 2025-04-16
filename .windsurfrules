@@ -1,1 +1,8 @@
 Não instale nenhum pacote globalmente, somente na pasta do projeto.
+
+git branch -M main
+git push -u origin main
+git remote add origin https://github.com/Gitthub-Andre/Servidor.git
+git add .
+git commit -m "Descreva sua alteração"
+git push

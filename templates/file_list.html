@@ -879,6 +879,10 @@
     </script>
 </head>
 <body>
+    <script>
+        // Garante que o current_path esteja disponível globalmente para o JS
+        window.current_path = "{{ current_path|e }}";
+    </script>
     <div class="panel">
         <h1 style="font-size:2.2rem; font-weight:700; letter-spacing:-1px; margin-bottom:18px; color:#2e7d32; text-shadow:0 2px 8px #e5f7ea;">Gerenciador de Arquivos</h1>
         <div class="breadcrumb">
@@ -1223,7 +1227,16 @@
                 for (let i = 0; i < files.length; i++) {
                     formData.append('file', files[i]);
                 }
-                
+                // Adiciona o current_path do contexto (garante upload na subpasta correta)
+                if (window.current_path !== undefined) {
+                    formData.append('current_path', window.current_path);
+                } else if (typeof current_path !== 'undefined') {
+                    formData.append('current_path', current_path);
+                } else {
+                    // fallback: tenta pegar do input do form
+                    const input = document.querySelector('input[name="current_path"]');
+                    if (input) formData.append('current_path', input.value);
+                }
                 fetch('/upload', {
                     method: 'POST',
                     body: formData

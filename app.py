@@ -108,13 +108,29 @@ def index(folder_path=''):
 def upload_file():
     current_path = request.form.get('current_path', '')
     uploaded_files = request.files.getlist('file')
-    
+
+    # Proteção contra path traversal
+    def is_safe_path(basedir, path):
+        return os.path.realpath(path).startswith(os.path.realpath(basedir))
+
     for file in uploaded_files:
         if file.filename:
             filename = secure_filename(file.filename)
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], current_path, filename)
-            file.save(save_path)
-    
+            save_dir = os.path.join(app.config['UPLOAD_FOLDER'], current_path)
+            save_path = os.path.join(save_dir, filename)
+            # Cria a pasta de destino se não existir
+            os.makedirs(save_dir, exist_ok=True)
+            # Checagem de segurança
+            if not is_safe_path(app.config['UPLOAD_FOLDER'], save_path):
+                app.logger.warning(f'Tentativa de upload inseguro: {save_path}')
+                flash('Caminho de upload inválido!', 'error')
+                continue
+            try:
+                file.save(save_path)
+                app.logger.info(f'Arquivo salvo em: {save_path}')
+            except Exception as e:
+                app.logger.error(f'Erro ao salvar arquivo: {e}')
+                flash(f'Erro ao salvar {filename}: {e}', 'error')
     return redirect(url_for('index', folder_path=current_path))
 
 # Nova rota para mover arquivos

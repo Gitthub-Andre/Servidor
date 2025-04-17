@@ -15,7 +15,7 @@ app.secret_key = 'sua_chave_secreta_aqui'  # Mude para uma chave segura em produ
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # 10 GB
-
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Desativa o cache para desenvolvimento
 
 # Verificar se o arquivo tem extensão
 def allowed_file(filename):
@@ -309,4 +309,4 @@ def plex_command():
 
 # Configuração para produção
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)

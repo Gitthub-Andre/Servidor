@@ -8,6 +8,7 @@
 
 # Node
 /node_modules
+venv/
 npm-debug.log
 yarn-error.log
 
